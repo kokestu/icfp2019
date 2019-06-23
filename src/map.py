@@ -115,7 +115,7 @@ class Map:
         x,y = self.map.exterior.xy
         ax = fig.add_subplot(111)
         ax.plot(x, y, 'b')
-        
+
         # plot wrapped area
         self._draw_wrapped(ax)
 
@@ -137,17 +137,17 @@ class Map:
         ax.yaxis.set_major_locator(MultipleLocator(1))
         ax.grid(which='major')
         fig.show()
-    
+
     def _draw_wrapped(self, ax):
         patches = [plt.Rectangle(point,width=1,height=1) for point in self.wrapped]
         collection = PatchCollection(patches, facecolor='k')
         ax.add_collection(collection)
-    
+
     def wrap_points(self, points):
         self.wrapped.update(points)
 
     def check_map(self):
-        return MultiPoint(list(self.wrapped)).convex_hull
+        raise NotImplementedError()   # TODO
 
     def wrap_points(self, points):
         self.wrapped.update(points)
