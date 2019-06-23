@@ -1,6 +1,6 @@
 
 from enum import Enum
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, Point, MultiPoint
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
@@ -132,6 +132,12 @@ class Map:
         ax.yaxis.set_major_locator(MultipleLocator(1))
         ax.grid(which='major')
         fig.show()
+
+    def check_map(self):
+        return MultiPoint(list(self.wrapped)).convex_hull
+
+    def wrap_points(self, points):
+        self.wrapped.update(points)
 
     def solve_map(self):
         return None   #TODO
