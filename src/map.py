@@ -153,6 +153,7 @@ class Map:
         else:
             raise UnknownActionException(action.name)
         self._wrap_points_with_manipulators()
+        self.count = self.count + 1
 
     def check_point(self, point):
         # check point in map
