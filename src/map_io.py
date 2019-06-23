@@ -26,7 +26,6 @@ def read_input(filepath):
     obstacles = [parse_points(points) for points in obstacles_str.split(";") if points != '']
     boosters = [parse_booster(points) for points in boosters_str.split(";") if points != '']
 
-
     return Map(corners, initial_location, obstacles, boosters)
 
 def write_output(solution, filename):

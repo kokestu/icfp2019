@@ -35,7 +35,7 @@ def main():
     s = strat(map)
     s.solve_map()
     if draw_map:
-        map._draw_map()
+        map._draw_map(is_interactive=True)
     return map, s
 
 if __name__== "__main__":

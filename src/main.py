@@ -20,12 +20,5 @@ def _test_map(filename):
     map._draw_map()
     return map
 
-def test_strategy():
-    import strategy
-    map = _test_map('part-1-initial/prob-001.desc')
-    s = strategy.ToAndFroStrategy(map)
-    s.solve_map()
-    return map, s
-
 if __name__== "__main__":
     main()

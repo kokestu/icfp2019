@@ -55,24 +55,24 @@ class RandomMovesStrategy(Strategy):
             action = random.choice(list(Action))  # choose a random action
             success = self.map.move(action)
         return action
-
-class FollowWallThenRandom(Strategy):
-    def __init__(self, map, **kwargs):
-        super().__init__(map, **kwargs)
-        self.initialising = True
-        self.action = Action.RIGHT
-        self.hand_on_wall = Action.UP
-
-    def get_hand_on_wall(action):
-        if action == Action.UP
-
-    def next_action(self):
-        if self.intialising:
-            self.map.move(Action.UP)
-            self.intialising = self.map.check_action(Action.UP)
-            return Action.UP
-        if self.map.check_action
-
-    def do_move(self):
-
-
+#
+# class FollowWallThenRandom(Strategy):
+#     def __init__(self, map, **kwargs):
+#         super().__init__(map, **kwargs)
+#         self.initialising = True
+#         self.action = Action.RIGHT
+#         self.hand_on_wall = Action.UP
+#
+#     def get_hand_on_wall(action):
+#         if action == Action.UP
+#
+#     def next_action(self):
+#         if self.intialising:
+#             self.map.move(Action.UP)
+#             self.intialising = self.map.check_action(Action.UP)
+#             return Action.UP
+#         if self.map.check_action
+#
+#     def do_move(self):
+#
+#

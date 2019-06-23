@@ -38,7 +38,6 @@ class Map:
         for obstacle in obstacles:
             self.map = self.map.difference(Polygon(obstacle))
         self.boosters = boosters   # the boosters on the map
-        self.count = 0   # the move count
         self.direction = Direction.E   # direction the robot is facing
         self.wrapped = set()   # the points that have been wrapped
         self._set_unwrapped()   # the points remaining unwrapped
@@ -82,7 +81,6 @@ class Map:
         else:
             raise UnknownActionException(action.name)
         self._wrap_points_with_manipulators()
-        self.count = self.count + 1
         return True
 
     def can_make_action(self, action):
@@ -125,7 +123,7 @@ class Map:
         else:
             return (PointStatus.UNWRAPPED, contents)
 
-    def _draw_map(self, interactive = True):
+    def _draw_map(self, is_interactive=False):
         fig = plt.figure(1, figsize=(5,5), dpi=90)
 
         # plot map
@@ -154,7 +152,7 @@ class Map:
         ax.yaxis.set_major_locator(MultipleLocator(1))
         ax.grid(which='major')
 
-        if interactive:
+        if is_interactive:
             self._plot_interactive(fig, ax)
 
         plt.gca().invert_yaxis()  # reset origin to top left
