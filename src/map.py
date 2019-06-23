@@ -7,6 +7,7 @@ from matplotlib.collections import PatchCollection
 import operator
 import numpy as np
 from itertools import product
+from matplotlib.widgets import Button, Slider
 
 class UnknownBoosterTypeException(Exception):
     pass
@@ -187,7 +188,7 @@ class Map:
         else:
             return (PointStatus.UNWRAPPED, contents)
 
-    def _draw_map(self):
+    def _draw_map(self, interactive = True):
         fig = plt.figure(1, figsize=(5,5), dpi=90)
 
         # plot map
@@ -196,12 +197,12 @@ class Map:
         ax.plot(x, y, 'b')
 
         # plot wrapped area
-        self._draw_wrapped(ax)
+        self.wrapped_plot = self._draw_wrapped(ax)
 
         # plot start location
         x, y = get_square(self.location)
         ax = fig.add_subplot(111)
-        ax.plot(x, y, 'gx')
+        self.robot_marker, = ax.plot(x, y, 'gx')
 
         # plot boosters
         for booster in self.boosters:
@@ -215,12 +216,54 @@ class Map:
         ax.xaxis.set_major_locator(MultipleLocator(1))
         ax.yaxis.set_major_locator(MultipleLocator(1))
         ax.grid(which='major')
+
+        if interactive:
+            self._plot_interactive(fig, ax)
+        
         fig.show()
+
+
+    def _plot_interactive(self, fig, ax): 
+        plt.ion()
+        fig.subplots_adjust(bottom=0.3)
+        button_size=0.1
+        x_corner=0.5
+        y_corner=0.05
+        ax_up = plt.axes([x_corner, y_corner+button_size, button_size, button_size])
+        ax_down = plt.axes([x_corner, y_corner, button_size, button_size])
+        ax_left = plt.axes([x_corner+button_size, y_corner, button_size, button_size])
+        ax_right = plt.axes([x_corner-button_size, y_corner, button_size, button_size])
+        ax_clockwise = plt.axes([x_corner+button_size, y_corner+button_size, button_size, button_size])
+        ax_anticlockwise = plt.axes([x_corner-button_size, y_corner+button_size, button_size, button_size])
+
+        self.button_up = Button(ax_up, u"\u25B2",color='r', hovercolor='g')
+        self.button_down = Button(ax_down, u"\u25BC",color='r', hovercolor='g')
+        self.button_left = Button(ax_left, u"\u25B6",color='r', hovercolor='g')
+        self.button_right = Button(ax_right, u"\u25C0",color='r', hovercolor='g')
+        self.button_clockwise = Button(ax_clockwise, u"\u21BB",color='r', hovercolor='g')
+        self.button_anticlockwise = Button(ax_anticlockwise, u"\u21BA",color='r', hovercolor='g')
+
+        def do_moving_wrapper(action):
+            def do_moving(event):
+                self.move(action)
+                self.wrapped_plot.remove()
+                self.wrapped_plot = self._draw_wrapped(ax)
+                x, y = get_square(self.location)
+                self.robot_marker.set_xdata(x)
+                self.robot_marker.set_ydata(y)
+            return do_moving
+
+        self.button_up.on_clicked(do_moving_wrapper(Action.DOWN))
+        self.button_down.on_clicked(do_moving_wrapper(Action.UP))
+        self.button_left.on_clicked(do_moving_wrapper(Action.RIGHT))
+        self.button_right.on_clicked(do_moving_wrapper(Action.LEFT))
+        self.button_clockwise.on_clicked(do_moving_wrapper(Action.CLOCKWISE))
+        self.button_anticlockwise.on_clicked(do_moving_wrapper(Action.ANTICLOCKWISE))
 
     def _draw_wrapped(self, ax):
         patches = [plt.Rectangle(point,width=1,height=1) for point in self.wrapped]
-        collection = PatchCollection(patches, facecolor='k')
-        ax.add_collection(collection)
+        collection = PatchCollection(patches, facecolor='k', alpha=0.5)
+        return ax.add_collection(collection)
 
     def check_map(self):
         if self.unwrapped:
