@@ -4,7 +4,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
 from map_io import read_input, write_output
-from strategy import RandomMovesStrategy, ToAndFroStrategy
+from strategy import RandomMovesStrategy, ToAndFroStrategy, FollowWallStrategy
 
 import sys
 
@@ -16,6 +16,8 @@ def get_strategy(str):
         return RandomMovesStrategy
     elif str == 'to_and_fro':
         return ToAndFroStrategy
+    elif str == 'follow_wall':
+        return FollowWallStrategy
     else:
         raise InvalidStrategyException(str)
 
@@ -32,7 +34,7 @@ def main():
     strat = get_strategy(strategy_str)
     map = read_input(filename)
     print('{}:'.format(os.path.basename(filename)))
-    s = strat(map)
+    s = strat(map, move_limit=10000)
     s.solve_map()
     if draw_map:
         map._draw_map(is_interactive=True)

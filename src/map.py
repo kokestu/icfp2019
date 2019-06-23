@@ -83,6 +83,14 @@ class Map:
         self._wrap_points_with_manipulators()
         return True
 
+    def check_move_action(self, action):
+        if action in [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]:
+            new_loc = tuple(map(operator.add, self.location, action.value))
+            status, _ = self.check_point(new_loc)
+            return status
+        else:
+            raise Exception('Can only check status of move action, not {}!'.format(action.name))
+
     def can_make_action(self, action):
         if action in [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]:
             new_loc = tuple(map(operator.add, self.location, action.value))
@@ -172,7 +180,7 @@ class Map:
                 self.robot_marker.set_xdata(x)
                 self.robot_marker.set_ydata(y)
             return do_moving
-        
+
         self.buttons = {}
         for action in [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT, Action.CLOCKWISE, Action.ANTICLOCKWISE]:
             xcoor, ycoor, unicode = action_button_props(action)

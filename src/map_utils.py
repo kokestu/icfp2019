@@ -25,6 +25,14 @@ class Action(Enum):
     ANTICLOCKWISE = 'Q'   # (turn manipulators 90° counterclockwise)
     # TODO implement boosters
 
+def rotate_action_clockwise(action):
+    x, y = action.value
+    return Action((-y, x))
+
+def rotate_action_anticlockwise(action):
+    x, y = action.value
+    return Action((y, -x)) 
+
 def action_string(move):
     if move == Action.UP:
         return 'W'
@@ -34,8 +42,8 @@ def action_string(move):
         return 'A'
     elif move == Action.RIGHT:
         return 'D'
-    elif move == Action.NOTHING:
-        return 'Z'
+    # elif move == Action.NOTHING:
+    #     return 'Z'
     elif move == Action.CLOCKWISE:
         return 'E'
     elif move == Action.ANTICLOCKWISE:

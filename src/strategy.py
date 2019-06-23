@@ -11,9 +11,18 @@ class Strategy:
         self.map = map
         self.move_limit = move_limit
 
-    def do_move(self):
-        """Make a single move on the map."""
+    def get_move(self):
+        """Decide which move to make on the map."""
         raise NotImplementedError('Implement in child class!')
+
+    def can_make_action(self, action):
+        try:
+            return self.check_move_action(action) != PointStatus.OUT_OF_MAP
+        except Exception:
+            return True
+
+    def check_move_action(self, action):
+        return self.map.check_move_action(action)
 
     def solve_map(self):
         """
@@ -22,9 +31,10 @@ class Strategy:
         """
         while not self.map.check_map() and self.count < self.move_limit:
             try:
-                move = self.do_move()
+                move = self.get_move()
                 self.moves.append(move)
                 self.count = self.count + 1
+                self.map.move(move)
             except ISurrenderException:
                 break
         status = 'SUCCESS!' if self.map.check_map() else 'FAILURE'
@@ -36,10 +46,10 @@ class ToAndFroStrategy(Strategy):
         super().__init__(map, **kwargs)
         self.action = Action.RIGHT
 
-    def do_move(self):
-        if self.map.move(self.action):
+    def get_move(self):
+        if self.can_make_action(self.action):
             return self.action   # while we can, move along
-        elif self.map.move(Action.DOWN):  # move down
+        elif self.can_make_action(Action.DOWN):  # move down
             self.action = Action(
                 (-self.action.value[0], self.action.value[1])
             )  # flip the direction
@@ -48,31 +58,35 @@ class ToAndFroStrategy(Strategy):
             raise ISurrenderException()  # can't move down further. give up.
 
 class RandomMovesStrategy(Strategy):
-    def do_move(self):
+    def get_move(self):
         import random
         success = False
         while not success:
             action = random.choice(list(Action))  # choose a random action
-            success = self.map.move(action)
+            success = self.can_make_action(action)
         return action
-#
-# class FollowWallThenRandom(Strategy):
-#     def __init__(self, map, **kwargs):
-#         super().__init__(map, **kwargs)
-#         self.initialising = True
-#         self.action = Action.RIGHT
-#         self.hand_on_wall = Action.UP
-#
-#     def get_hand_on_wall(action):
-#         if action == Action.UP
-#
-#     def next_action(self):
-#         if self.intialising:
-#             self.map.move(Action.UP)
-#             self.intialising = self.map.check_action(Action.UP)
-#             return Action.UP
-#         if self.map.check_action
-#
-#     def do_move(self):
-#
-#
+
+class FollowWallStrategy(Strategy):
+    def __init__(self, map, **kwargs):
+        super().__init__(map, **kwargs)
+        self.initialising = True
+        self.action = Action.RIGHT
+        self.hand_on_wall = Action.UP
+
+    def get_move(self):
+        if self.initialising:   # move up until we meet a wall
+            self.initialising = self.map.can_make_action(Action.UP)
+            return Action.UP
+        if self.can_make_action(self.hand_on_wall):
+            # reached a corner! go round anticlockwise
+            self.action = self.hand_on_wall
+            self.hand_on_wall = rotate_action_anticlockwise(self.hand_on_wall)
+            return self.action
+        if self.can_make_action(self.action):
+            # haven't reached a corner, continue
+            return self.action
+        else:
+            # reached a corner! go round clockwise
+            self.hand_on_wall = self.action
+            self.action = rotate_action_clockwise(self.action)
+            return self.action
