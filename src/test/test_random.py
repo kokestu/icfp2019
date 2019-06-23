@@ -4,7 +4,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
 from map_io import read_input, write_output
-from strategy import ToAndFroStrategy
+from strategy import RandomMovesStrategy
 
 import sys
 
@@ -16,13 +16,14 @@ def main():
     try:
         draw_map = sys.argv[2] == '--draw'
     except IndexError:
-        pass
+        draw_map = False
     map = read_input(filename)
     print('{}:'.format(os.path.basename(filename)))
-    s = ToAndFroStrategy(map)
+    s = RandomMovesStrategy(map)
     s.solve_map()
     if draw_map:
         map._draw_map()
+    return map, s
 
 if __name__== "__main__":
     main()
