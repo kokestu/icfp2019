@@ -155,10 +155,14 @@ class Map:
         self.wrapped.update(points)
 
     def check_map(self):
-        raise NotImplementedError()   # TODO
+        if self.unwrapped:
+              return False
+        else:
+              return True
 
     def wrap_points(self, points):
         self.wrapped.update(points)
+        self.unwrapped.difference_update(points)
 
     def solve_map(self):
         return None   #TODO
