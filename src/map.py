@@ -139,9 +139,12 @@ class Map:
         fig.show()
     
     def _draw_wrapped(self, ax):
-        patches = [plt.Rectangle(points,width=1,height=1) for points in self.wrapped]
+        patches = [plt.Rectangle(point,width=1,height=1) for point in self.wrapped]
         collection = PatchCollection(patches, facecolor='k')
         ax.add_collection(collection)
+    
+    def wrap_points(self, points):
+        self.wrapped.update(points)
 
     def solve_map(self):
         return None   #TODO
