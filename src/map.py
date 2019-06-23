@@ -4,7 +4,9 @@ from shapely.geometry import Polygon, Point, MultiPoint
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.collections import PatchCollection
-
+import numpy as np
+from shapely.geometry import MultiPoint
+from itertools import product
 
 class UnknownBoosterTypeException(Exception):
     pass
@@ -70,6 +72,12 @@ class Map:
         for obstacle in obstacles:
             self.map = self.map.difference(Polygon(obstacle))
         self.boosters = boosters
+        x_min,y_min,x_max,y_max=self.map.bounds
+        x=np.arange(x_min+0.5, x_max+0.5)
+        y=np.arange(y_min+0.5, y_max+0.5)
+        all_possible_points=list(product(x, y))
+        points_on_map=self.map.intersection(MultiPoint(all_possible_points))
+        self.unwrapped={(i.x - 0.5, i.y - 0.5)for i in points_on_map}
 
     def check_point(self, point):
         # check point in map
