@@ -15,11 +15,7 @@ def main():
     solution = map.solve_map()   # TODO
     write_output(solution, "{}.sol".format(filename))   # TODO
 
-def _test_map():
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        print('Program requires input file!')
+def _test_map(filename):
     map = read_input(filename)
     map._draw_map()
     return map

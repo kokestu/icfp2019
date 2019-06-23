@@ -22,15 +22,15 @@ class PointStatus(Enum):
     WRAPPED = 3
 
 class PointContents(Enum):
-    BOOSTER_B = 2
-    BOOSTER_F = 3
-    BOOSTER_L = 4
-    BOOSTER_X = 5
-    ROBOT = 6
-    NOTHING = 7
+    BOOSTER_B = 0
+    BOOSTER_F = 1
+    BOOSTER_L = 2
+    BOOSTER_X = 3
+    ROBOT = 4
+    NOTHING = 5
 
 def draw_obstacle(fig, obstacle):
-    x, y = obstacle.exterior.xy
+    x, y = obstacle.xy
     ax = fig.add_subplot(111)
     ax.plot(x, y, 'r')
 
@@ -67,7 +67,8 @@ class Map:
         self.wrapped = set()
         self.map = Polygon(corners)
         self.location = initial_location
-        self.obstacles = [Polygon(obstacle) for obstacle in obstacles]
+        for obstacle in obstacles:
+            self.map = self.map.difference(Polygon(obstacle))
         self.boosters = boosters
 
     def check_point(self, point):
@@ -107,39 +108,6 @@ class Map:
         else:
             return (PointStatus.UNWRAPPED, contents)
 
-    def check_point_contents(self, point):
-        # check point in map
-        x, y = get_square(point)
-        p = Point(x, y)
-        if not self.map.contains(p):
-            return PointContents.OUT_OF_MAP
-
-        # check point in obstacle
-        for obstacle in self.obstacles:
-            if obstacle.contains(p):
-                return PointContents.IN_OBSTACLE
-
-        # check robot location
-        if point == self.location:
-            return PointContents.ROBOT
-
-        # check booster locations
-        boosters = [b for b in self.boosters if booster.location == point]
-        if len(boosters) != 0:
-            type = boosters[0].type
-            if type == BoosterType.B:
-                return PointContents.BOOSTER_B
-            elif type == BoosterType.F:
-                return PointContents.BOOSTER_F
-            elif type == BoosterType.L:
-                return PointContents.BOOSTER_L
-            elif type == BoosterType.X:
-                return PointContents.BOOSTER_X
-            else:
-                raise UnknownBoosterTypeException(type.value)
-
-        return PointContents.NOTHING
-
     def _draw_map(self):
         fig = plt.figure(1, figsize=(5,5), dpi=90)
 
@@ -161,7 +129,7 @@ class Map:
             booster.draw_booster(fig)
 
         # plot obstacles
-        for obstacle in self.obstacles:
+        for obstacle in self.map.interiors:
             draw_obstacle(fig, obstacle)
 
         # add grid lines
