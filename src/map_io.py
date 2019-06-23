@@ -1,7 +1,8 @@
 
-from map import Map, BoosterType, Booster, UnknownBoosterTypeException
+from map import Map, Booster
 from ast import literal_eval as make_tuple
 from shapely.geometry import MultiPoint
+import map_utils
 import re
 
 class MalformedPointException(Exception):
@@ -20,20 +21,11 @@ def read_input(filepath):
 
     map_str, location_str, obstacles_str, boosters_str = lines[0].split('#')
 
-    # print(map_str, location_str, obstacles_str, boosters_str)
-
     corners = parse_points(map_str)
     initial_location = parse_point(location_str)
     obstacles = [parse_points(points) for points in obstacles_str.split(";") if points != '']
     boosters = [parse_booster(points) for points in boosters_str.split(";") if points != '']
 
-    # for corner in corners:
-    #     print(corner)
-    # print(initial_location)
-    # for obstacle in obstacles:
-    #     print(obstacle)
-    # for booster in boosters:
-    #     print(booster)
 
     return Map(corners, initial_location, obstacles, boosters)
 
