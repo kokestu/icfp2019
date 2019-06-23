@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.collections import PatchCollection
 import operator
-import numpy
+import numpy as np
 from itertools import product
 
 class UnknownBoosterTypeException(Exception):
@@ -228,6 +228,7 @@ class Map:
               return True
 
     def wrap_points(self, points):
+        points = set(points).intersection(self.unwrapped)
         self.wrapped.update(points)
         self.unwrapped.difference_update(points)
 
