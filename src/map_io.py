@@ -2,7 +2,7 @@
 from map import Map, Booster
 from ast import literal_eval as make_tuple
 from shapely.geometry import MultiPoint
-import map_utils
+from map_utils import *
 import re
 
 class MalformedPointException(Exception):

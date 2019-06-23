@@ -16,7 +16,6 @@ class Strategy:
 
 
 class ToAndFroStrategy(Strategy):
-
     def solve_map(self):
         count = 0
         action = Action.RIGHT
