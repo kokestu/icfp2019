@@ -4,16 +4,47 @@ from shapely.geometry import Polygon, Point, MultiPoint
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.collections import PatchCollection
-
+import operator
 
 class UnknownBoosterTypeException(Exception):
     pass
 
+class UnknownDirectionException(Exception):
+    pass
+
+class UnknownActionException(Exception):
+    pass
+
+class ActionCannotBePerformedException(Exception):
+    pass
+
+class Action(Enum):
+    """
+    Action the robot should take (on the plot, UP and DOWN are inverted).
+    """
+    UP = (0, -1)   # (move up)
+    DOWN =(0, 1)   # (move down)
+    LEFT = (-1, 0)   # (move left)
+    RIGHT = (1, 0)   # (move right)
+    NOTHING = 'Z'   # (do nothing)
+    CLOCKWISE = 'E'   # (turn manipulators 90° clockwise)
+    ANTICLOCKWISE = 'Q'   # (turn manipulators 90° counterclockwise)
+    # TODO implement boosters
+
+class Direction(Enum):
+    """
+    Direction the robot is facing (on the plot, N and S are inverted).
+    """
+    N = 0
+    E = 1
+    S = 2
+    W = 3
+
 class BoosterType(Enum):
-    B = 'extension'
-    F = 'fastwheels'
-    L = 'drill'
-    X = 'mysterious'
+    B = 0   # 'extension'
+    F = 1   # 'fastwheels'
+    L = 2   # 'drill'
+    X = 3   # 'mysterious'
 
 class PointStatus(Enum):
     OUT_OF_MAP = 0
@@ -66,10 +97,51 @@ class Map:
     def __init__(self, corners, initial_location, obstacles, boosters):
         self.wrapped = set()
         self.map = Polygon(corners)
-        self.location = initial_location
+        self.location = initial_location   # location of the robot
         for obstacle in obstacles:
             self.map = self.map.difference(Polygon(obstacle))
-        self.boosters = boosters
+        self.boosters = boosters   # the boosters on the map
+        self.count = 0   # the move count
+        self.direction = Direction.E   # direction the robot is facing
+        self._wrap_points_with_manipulators()
+
+    def _wrap_points_with_manipulators(self):
+        # TODO implement line of sight
+        x, y = self.location
+        if self.direction == Direction.N:
+            self.wrap_points([(x, y), (x-1, y+1), (x, y+1), (x+1, y+1)])
+        elif self.direction == Direction.E:
+            self.wrap_points([(x, y), (x+1, y+1), (x+1, y), (x+1, y-1)])
+        elif self.direction == Direction.S:
+            self.wrap_points([(x, y), (x+1, y-1), (x, y-1), (x-1, y-1)])
+        elif self.direction == Direction.W:
+            self.wrap_points([(x, y), (x-1, y-1), (x-1, y), (x-1, y+1)])
+        else:
+            raise UnknownDirectionException(self.direction.value, self.direction.name)
+
+    def _check_move(self, action):
+        status, _ = self.check_point(point)
+        if status == PointStatus.OUT_OF_MAP:
+            raise ActionCannotBePerformedException
+
+    def move(self, action):
+        if action == Action.NOTHING:
+            pass
+        elif action == Action.CLOCKWISE:
+            self.direction = Direction((self.direction.value + 1) % 4)
+        elif action == Action.ANTICLOCKWISE:
+            self.direction = Direction((self.direction.value - 1) % 4)
+        elif action in [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]:
+            new_loc = tuple(map(operator.add, self.location, action.value))
+            status, _ = self.check_point(new_loc)
+            if status == PointStatus.OUT_OF_MAP:
+                raise ActionCannotBePerformedException(
+                    str(self.location), action.name, str(new_loc)
+                )
+            self.location = new_loc
+        else:
+            raise UnknownActionException(action.name)
+        self._wrap_points_with_manipulators()
 
     def check_point(self, point):
         # check point in map
@@ -77,11 +149,6 @@ class Map:
         p = Point(x, y)
         if not self.map.contains(p):
             return (PointStatus.OUT_OF_MAP, PointContents.NOTHING)
-
-        # check point in obstacle
-        for obstacle in self.obstacles:
-            if obstacle.contains(p):
-                return (PointStatus.IN_OBSTACLE, PointContents.NOTHING)
 
         boosters = [b for b in self.boosters if b.location == point]
         # check contents
@@ -144,6 +211,7 @@ class Map:
         ax.add_collection(collection)
 
     def wrap_points(self, points):
+        points = [p for p in points if self.check_point(p)[0] != PointStatus.OUT_OF_MAP]
         self.wrapped.update(points)
 
     def check_map(self):
