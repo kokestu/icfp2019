@@ -1,6 +1,6 @@
 
 from enum import Enum
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
@@ -13,18 +13,29 @@ class BoosterType(Enum):
     L = 'drill'
     X = 'mysterious'
 
+class PointStatus(Enum):
+    OUT_OF_MAP = 0
+    IN_OBSTACLE = 1
+    UNWRAPPED = 2
+    WRAPPED = 3
+
+class PointContents(Enum):
+    BOOSTER_B = 2
+    BOOSTER_F = 3
+    BOOSTER_L = 4
+    BOOSTER_X = 5
+    ROBOT = 6
+    NOTHING = 7
+
 def draw_obstacle(fig, obstacle):
     x, y = obstacle.exterior.xy
     ax = fig.add_subplot(111)
     ax.plot(x, y, 'r')
 
-class Ground:
-    def __init__(self, location):
-        self.isWrapped = False
-        self.location = location
-
-    def wrap(self):
-        self.isWrapped = True
+def get_square(point):
+    """Get the centre of the square"""
+    x, y = point
+    return x+0.5, y+0.5
 
 class Booster:
     def __init__(self, type, location):
@@ -45,16 +56,87 @@ class Booster:
             raise UnknownBoosterTypeException(self.type.value)
 
     def draw_booster(self, fig):
-        x, y = self.location
+        x, y = get_square(self.location)
         ax = fig.add_subplot(111)
-        ax.plot(x+0.5, y+0.5, color=self.get_booster_colour(), marker='o')
+        ax.plot(x, y, color=self.get_booster_colour(), marker='o')
 
 class Map:
     def __init__(self, corners, initial_location, obstacles, boosters):
+        self.wrapped = set()
         self.map = Polygon(corners)
         self.location = initial_location
         self.obstacles = [Polygon(obstacle) for obstacle in obstacles]
         self.boosters = boosters
+
+    def check_point(self, point):
+        # check point in map
+        x, y = get_square(point)
+        p = Point(x, y)
+        if not self.map.contains(p):
+            return (PointStatus.OUT_OF_MAP, PointContents.NOTHING)
+
+        # check point in obstacle
+        for obstacle in self.obstacles:
+            if obstacle.contains(p):
+                return (PointStatus.IN_OBSTACLE, PointContents.NOTHING)
+
+        boosters = [b for b in self.boosters if b.location == point]
+        # check contents
+        if point == self.location:
+            contents = PointContents.ROBOT
+        elif len(boosters) != 0:
+            type = boosters[0].type
+            if type == BoosterType.B:
+                contents = PointContents.BOOSTER_B
+            elif type == BoosterType.F:
+                contents = PointContents.BOOSTER_F
+            elif type == BoosterType.L:
+                contents = PointContents.BOOSTER_L
+            elif type == BoosterType.X:
+                contents = PointContents.BOOSTER_X
+            else:
+                raise UnknownBoosterTypeException(type.value)
+        else:
+            contents = PointContents.NOTHING
+
+        # check if wrapped
+        if point in self.wrapped:
+            return (PointStatus.WRAPPED, contents)
+        else:
+            return (PointStatus.UNWRAPPED, contents)
+
+    def check_point_contents(self, point):
+        # check point in map
+        x, y = get_square(point)
+        p = Point(x, y)
+        if not self.map.contains(p):
+            return PointContents.OUT_OF_MAP
+
+        # check point in obstacle
+        for obstacle in self.obstacles:
+            if obstacle.contains(p):
+                return PointContents.IN_OBSTACLE
+
+        # check robot location
+        if point == self.location:
+            return PointContents.ROBOT
+
+        # check booster locations
+        boosters = [b for b in self.boosters if booster.location == point]
+        if len(boosters) != 0:
+            type = boosters[0].type
+            if type == BoosterType.B:
+                return PointContents.BOOSTER_B
+            elif type == BoosterType.F:
+                return PointContents.BOOSTER_F
+            elif type == BoosterType.L:
+                return PointContents.BOOSTER_L
+            elif type == BoosterType.X:
+                return PointContents.BOOSTER_X
+            else:
+                raise UnknownBoosterTypeException(type.value)
+
+        return PointContents.NOTHING
 
     def _draw_map(self):
         fig = plt.figure(1, figsize=(5,5), dpi=90)
@@ -65,9 +147,9 @@ class Map:
         ax.plot(x, y, 'b')
 
         # plot start location
-        x, y = self.location
+        x, y = get_square(self.location)
         ax = fig.add_subplot(111)
-        ax.plot(x+0.5, y+0.5, 'gx')
+        ax.plot(x, y, 'gx')
 
         # plot boosters
         for booster in self.boosters:
