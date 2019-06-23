@@ -43,6 +43,26 @@ def action_string(move):
     else:
         raise UnknownActionException(move.name)
 
+BUTTON_SIZE=0.1
+X_CORNER=0.5
+Y_CORNER=0.05
+
+def action_button_props(action):
+    if action == Action.UP:
+        return (X_CORNER, Y_CORNER + BUTTON_SIZE, u"\u25B2")
+    elif action == Action.DOWN:
+        return (X_CORNER, Y_CORNER, u"\u25BC")
+    elif action == Action.LEFT:
+        return (X_CORNER - BUTTON_SIZE, Y_CORNER, u"\u25C0")
+    elif action == Action.RIGHT:
+        return (X_CORNER + BUTTON_SIZE, Y_CORNER, u"\u25B6")
+    elif action == Action.CLOCKWISE:
+        return (X_CORNER + BUTTON_SIZE, Y_CORNER + BUTTON_SIZE, u"\u21BB")
+    elif action == Action.ANTICLOCKWISE:
+        return (X_CORNER - BUTTON_SIZE, Y_CORNER + BUTTON_SIZE, u"\u21BA")
+    else:
+        raise Exception('No button for action {}!'.format(move.name))
+
 class Direction(Enum):
     """
     Direction the robot is facing (on the plot, N and S are inverted).
