@@ -84,6 +84,14 @@ class Map:
         self.count = self.count + 1
         return True
 
+    def can_make_action(self, action):
+        if action in [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]:
+            new_loc = tuple(map(operator.add, self.location, action.value))
+            status, _ = self.check_point(new_loc)
+            if status == PointStatus.OUT_OF_MAP:
+                return False
+        return True
+    
     def check_point(self, point):
         # check point in map
         x, y = get_square(point)
@@ -144,6 +152,8 @@ class Map:
         ax.xaxis.set_major_locator(MultipleLocator(1))
         ax.yaxis.set_major_locator(MultipleLocator(1))
         ax.grid(which='major')
+
+        plt.gca().invert_yaxis()  # reset origin to top left
         fig.show()
 
     def _draw_wrapped(self, ax):
@@ -152,10 +162,7 @@ class Map:
         ax.add_collection(collection)
 
     def check_map(self):
-        if self.unwrapped:
-              return False
-        else:
-              return True
+        return not self.unwrapped
 
     def wrap_points(self, points):
         points = set(points).intersection(self.unwrapped)
