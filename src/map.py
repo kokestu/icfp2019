@@ -5,6 +5,8 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.collections import PatchCollection
 import operator
+import numpy
+from itertools import product
 
 class UnknownBoosterTypeException(Exception):
     pass
@@ -95,7 +97,6 @@ class Booster:
 
 class Map:
     def __init__(self, corners, initial_location, obstacles, boosters):
-        self.wrapped = set()
         self.map = Polygon(corners)
         self.location = initial_location   # location of the robot
         for obstacle in obstacles:
@@ -103,7 +104,17 @@ class Map:
         self.boosters = boosters   # the boosters on the map
         self.count = 0   # the move count
         self.direction = Direction.E   # direction the robot is facing
+        self.wrapped = set()   # the points that have been wrapped
+        self._set_unwrapped()   # the points remaining unwrapped
         self._wrap_points_with_manipulators()
+
+    def _set_unwrapped(self):
+        x_min,y_min,x_max,y_max=self.map.bounds
+        x = np.arange(x_min+0.5, x_max+0.5)
+        y = np.arange(y_min+0.5, y_max+0.5)
+        all_possible_points = list(product(x, y))
+        points_on_map = self.map.intersection(MultiPoint(all_possible_points))
+        self.unwrapped = {(i.x - 0.5, i.y - 0.5) for i in points_on_map}
 
     def _wrap_points_with_manipulators(self):
         # TODO implement line of sight
@@ -210,15 +221,15 @@ class Map:
         collection = PatchCollection(patches, facecolor='k')
         ax.add_collection(collection)
 
-    def wrap_points(self, points):
-        points = [p for p in points if self.check_point(p)[0] != PointStatus.OUT_OF_MAP]
-        self.wrapped.update(points)
-
     def check_map(self):
-        raise NotImplementedError()   # TODO
+        if self.unwrapped:
+              return False
+        else:
+              return True
 
     def wrap_points(self, points):
         self.wrapped.update(points)
+        self.unwrapped.difference_update(points)
 
     def solve_map(self):
         return None   #TODO
